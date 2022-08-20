@@ -8,6 +8,9 @@ const multer = require("multer");
 const fetch = require("node-fetch");
 const fs = require("fs");
 const request = require("request");
+var admin = require("firebase-admin");
+var firestore = require("firebase-admin/firestore");
+var serviceAccount = require("./supportus-app-firebase-adminsdk-llr8n-274919993e.json");
 var upload = multer({ dest: "uploads/" });
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -48,8 +51,29 @@ app.get("/send", upload.single("fileInput"), (req, res) => {
     .then((response) => response.text())
     .then((response) => {
       console.log(response);
+      res.send(response);
     })
     .catch((err) => {
       console.log(err);
     });
+
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+
+  const db = firestore.getFirestore();
+
+  test();
+
+  async function test() {
+    db.collection("human").doc("LA2").set({
+      id: "yungs0917",
+      time: "18:30",
+      message: "안녕하세요",
+    });
+  }
+
+  app.get("/data", (req, res) => {
+    test();
+  });
 });
