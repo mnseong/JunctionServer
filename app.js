@@ -23,6 +23,10 @@ app.listen(port, () => {
   console.log(`server is listening at localhost:${port}`);
 });
 
+app.get("/", (req, res) => {
+  res.send("server On");
+});
+
 app.get("/send", upload.single("fileInput"), (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -41,7 +45,7 @@ app.get("/send", upload.single("fileInput"), (req, res) => {
     `https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Kor`,
     speechData
   )
-    .then((response) => response.json())
+    .then((response) => response.text())
     .then((response) => {
       console.log(response);
     })
