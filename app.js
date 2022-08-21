@@ -8,11 +8,12 @@ const multer = require("multer");
 const fetch = require("node-fetch");
 const fs = require("fs");
 const request = require("request");
+var firebase = require("firebase");
 var admin = require("firebase-admin");
 var firestore = require("firebase-admin/firestore");
-var serviceAccount = require("./supportus-app-firebase-adminsdk-llr8n-274919993e.json");
 var upload = multer({ dest: "uploads/" });
 const bodyParser = require("body-parser");
+const { time } = require("console");
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cors());
@@ -30,50 +31,72 @@ app.get("/", (req, res) => {
   res.send("server On");
 });
 
+const firebaseConfig = {
+  apiKey: "AIzaSyBS3wuBvBVBNxFxKiNDxqfHCsmDFNu6N78",
+  authDomain: "supportus-a2878.firebaseapp.com",
+  databaseURL: "https://supportus-a2878-default-rtdb.firebaseio.com",
+  projectId: "supportus-a2878",
+  storageBucket: "supportus-a2878.appspot.com",
+  messagingSenderId: "450738608417",
+  appId: "1:450738608417:web:e6229ad9f31f0226bc4660",
+  measurementId: "G-330B1298HE",
+};
+firebase.initializeApp(firebaseConfig);
+let database = firebase.database();
+
+app.get("/push", function (req, res) {
+  let query = req.query.name;
+
+  database
+    .ref("user")
+    .push({ name: name, time: time, text: text }, function (error) {
+      if (error) console.error(error);
+      else console.log("success save !!");
+    });
+  return res.json({ firebase: true });
+});
+
 app.get("/send", upload.single("fileInput"), (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
+  async () => {
+    const date = new Date();
+    let time = date.toLocaleTimeString("ko-kr");
+    let name = "유승훈";
+    let text = "";
 
-  let speechData = {
-    method: "POST",
-    body: fs.createReadStream("./sttTest1.mp3"),
-    headers: {
-      "Content-Type": "application/octet-stream",
-      "X-NCP-APIGW-API-KEY-ID": "bi3sbu34oo",
-      "X-NCP-APIGW-API-KEY": "3ilzXddSzUs555vWaxIBtg8RCP5n3E9RRvWkYJQ0",
-    },
+    let speechData = {
+      method: "POST",
+      body: fs.createReadStream("./sttTest1.mp3"),
+      headers: {
+        "Content-Type": "application/octet-stream",
+        "X-NCP-APIGW-API-KEY-ID": "bi3sbu34oo",
+        "X-NCP-APIGW-API-KEY": "3ilzXddSzUs555vWaxIBtg8RCP5n3E9RRvWkYJQ0",
+      },
+    };
+
+    await fetch(
+      `https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Kor`,
+      speechData
+    )
+      .then((response) => response.text())
+      .then((response) => {
+        console.log(response);
+        res.send(response);
+        text = response;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    setTimeout(function () {
+      database
+        .ref("user")
+        .push({ name: name, time: time, text: text }, function (error) {
+          if (error) console.error(error);
+          else console.log("success save !!");
+        });
+    }, 7000);
   };
 
-  fetch(
-    `https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Kor`,
-    speechData
-  )
-    .then((response) => response.text())
-    .then((response) => {
-      console.log(response);
-      res.send(response);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-
-  const db = firestore.getFirestore();
-
-  test();
-
-  async function test() {
-    db.collection("human").doc("LA2").set({
-      id: "yungs0917",
-      time: "18:30",
-      message: "안녕하세요",
-    });
-  }
-
-  app.get("/data", (req, res) => {
-    test();
-  });
+  return res.json({ firebase: true });
 });
