@@ -59,44 +59,35 @@ app.get("/push", function (req, res) {
 app.get("/send", upload.single("fileInput"), (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
-  async () => {
-    const date = new Date();
-    let time = date.toLocaleTimeString("ko-kr");
-    let name = "유승훈";
-    let text = "";
 
-    let speechData = {
-      method: "POST",
-      body: fs.createReadStream("./sttTest1.mp3"),
-      headers: {
-        "Content-Type": "application/octet-stream",
-        "X-NCP-APIGW-API-KEY-ID": "bi3sbu34oo",
-        "X-NCP-APIGW-API-KEY": "3ilzXddSzUs555vWaxIBtg8RCP5n3E9RRvWkYJQ0",
-      },
-    };
+  const date = new Date();
+  let time = date.toLocaleTimeString("ko-kr");
+  let name = "유승훈";
+  let text = "a";
 
-    await fetch(
-      `https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Kor`,
-      speechData
-    )
-      .then((response) => response.text())
-      .then((response) => {
-        console.log(response);
-        res.send(response);
-        text = response;
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-    setTimeout(function () {
-      database
-        .ref("user")
-        .push({ name: name, time: time, text: text }, function (error) {
-          if (error) console.error(error);
-          else console.log("success save !!");
-        });
-    }, 7000);
+  let speechData = {
+    method: "POST",
+    body: fs.createReadStream("./sttTest1.mp3"),
+    headers: {
+      "Content-Type": "application/octet-stream",
+      "X-NCP-APIGW-API-KEY-ID": "bi3sbu34oo",
+      "X-NCP-APIGW-API-KEY": "3ilzXddSzUs555vWaxIBtg8RCP5n3E9RRvWkYJQ0",
+    },
   };
+
+  function stt(response) {
+    text = response;
+
+    return text;
+  }
+  fetch(
+    `https://naveropenapi.apigw.ntruss.com/recog/v1/stt?lang=Eng`,
+    speechData
+  )
+    .then((response) => response.json())
+    .then((response) => {
+      return res.send(stt(response));
+    });
 
   return res.json({ firebase: true });
 });
