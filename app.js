@@ -67,7 +67,7 @@ app.get("/send", upload.single("fileInput"), (req, res) => {
 
   let speechData = {
     method: "POST",
-    body: fs.createReadStream("./sttTest1.mp3"),
+    body: fs.createReadStream("./sttTest2.mp3"),
     headers: {
       "Content-Type": "application/octet-stream",
       "X-NCP-APIGW-API-KEY-ID": "bi3sbu34oo",
